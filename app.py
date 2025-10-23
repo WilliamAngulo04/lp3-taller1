@@ -5,8 +5,9 @@ import os
 from flask import Flask
 from flask_restful import Api
 from models import db
-from resources.video import Video
+from resources.video import Video, VideosList
 from config import config
+from flasgger import Swagger
 
 def create_app(config_name='default'):
     """
@@ -28,10 +29,19 @@ def create_app(config_name='default'):
     # Inicializar extensiones
     db.init_app(app)
     api = Api(app)
+
+    # Configurar Swagger
+    swagger_template = {
+        "swagger": "2.0",
+        "info": {"title": "Videos API", "version": "1.0.0", "description": "API para gestionar videos"},
+        "basePath": "/"
+    }
+    Swagger(app, template=swagger_template)
     
     # Registrar rutas
     api.add_resource(Video, "/api/videos/<int:video_id>")
-    
+    api.add_resource(VideosList, "/api/videos")
+
     return app
 
 if __name__ == "__main__":

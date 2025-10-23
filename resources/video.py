@@ -33,8 +33,9 @@ def abort_if_video_doesnt_exist(video_id):
         video_id (int): ID del video a verificar
     """
     video = VideoModel.query.filter_by(id=video_id).first()
+    # print(video_id, video)
     if not video:
-        abort(404, message=f"No se encontró un video con el ID {video_id}")
+        abort(404, message=f"No se encontro un video con el ID {video_id}")
     return video
 
 class Video(Resource):
@@ -53,13 +54,35 @@ class Video(Resource):
         """
         Obtiene un video por su ID
         
-        Args:
-            video_id (int): ID del video a obtener
-            
-        Returns:
-            VideoModel: El video solicitado
+        ---
+        tags:
+            - videos
+        parameters:
+          - in: path
+            name: video_id
+            type: integer
+            required: true
+            description: ID del video a obtener
+        responses:
+          200:
+            description: Video encontrado
+            schema:
+                id: Video
+                properties:
+                    id:
+                        type: integer
+                    name:
+                        type: string
+                    views:
+                        type: integer
+                    likes:
+                        type: integer
+          404:
+            description: Video no encontrado
         """
+        print("GET video called")
         video = abort_if_video_doesnt_exist(video_id)
+        print( video_id, video)
         return video
     
     @marshal_with(resource_fields)
@@ -67,46 +90,140 @@ class Video(Resource):
         """
         Crea un nuevo video con un ID específico
         
-        Args:
-            video_id (int): ID para el nuevo video
-            
-        Returns:
-            VideoModel: El video creado
+        ---
+        tags:
+            - videos
+        parameters:
+          - in: path
+            name: video_id
+            type: integer
+            required: true
+            description: ID del video a crear
+          - in: body
+            name: body
+            required: true
+            schema:
+                required: ["name", "views", "likes"]
+                properties:
+                    name: {type: string}
+                    views: {type: integer}
+                    likes: {type: integer}
+        responses:
+          201:
+            description: Video creado exitosamente
+          409:
+            description: El video ya existe
         """
-        video = VideoModel(id=video_id, **video_put_args.parse_args())
-        db.session.add(video)
-        db.session.commit()
-        return video
+        args = video_put_args.parse_args()
+        # Verificar si ya existe
+        existing = VideoModel.query.filter_by(id=video_id).first()
+        if existing:
+            abort(409, message=f"Ya existe un video con el ID {video_id}")
+        video = VideoModel(id=video_id, **args)
+        try:
+            db.session.add(video)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            abort(500, message="Error al crear el video")
+        return video, 201
 
     @marshal_with(resource_fields)
     def patch(self, video_id):
         """
         Actualiza un video existente
         
-        Args:
-            video_id (int): ID del video a actualizar
-            
-        Returns:
-            VideoModel: El video actualizado
+        ---
+        tags:
+            - videos
+        parameters:
+          - name: video_id
+            in: path
+            type: integer
+            required: true
+            description: ID del video a actualizar
+          - in: body
+            name: body
+            schema:
+                properties:
+                    name: {type: string}
+                    views: {type: integer}
+                    likes: {type: integer}
+        responses:
+          200:
+            description: Video actualizado exitosamente
+          404:
+            description: Video no encontrado
         """
         video = abort_if_video_doesnt_exist(video_id)
         for key, value in video_update_args.parse_args().items():
+            if value is None:
+                continue
             setattr(video, key, value)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            abort(500, message="Error al actualizar el video")
         return video
 
     def delete(self, video_id):
         """
         Elimina un video existente
         
-        Args:
-            video_id (int): ID del video a eliminar
-            
-        Returns:
-            str: Mensaje vacío con código 204
+        ---
+        tags:
+            - videos
+        parameters:
+          - in: path
+            name: video_id
+            type: integer
+            required: true
+            description: ID del video a eliminar
+        responses:
+          204:
+            description: Video eliminado exitosamente
+          404:
+            description: Video no encontrado
         """
         video = abort_if_video_doesnt_exist(video_id)
         db.session.delete(video)
         db.session.commit()
         return '', 204
 
+class VideosList(Resource):
+    @marshal_with(resource_fields)
+    def get(self):
+        videos = VideoModel.query.all()
+        return videos
+
+    @marshal_with(resource_fields)
+    def post(self):
+        """
+        Crea video sin ID (ID Automático)
+        ---
+        tags:
+            - videos
+        parameters:
+          - in: body
+            name: body
+            required: true
+            schema:
+                required: ["name", "views", "likes"]
+                properties:
+                    name: {type: string}
+                    views: {type: integer}
+                    likes: {type: integer}
+        responses:
+          201:
+            description: Video creado exitosamente
+        """
+        args = video_put_args.parse_args()
+        video = VideoModel(**args)
+        try:
+            db.session.add(video)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            abort(500, message="Error al crear el video")
+        return video, 201

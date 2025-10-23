@@ -4,6 +4,9 @@ Esta es una API RESTful para gestión de videos, desarrollada con Flask, Flask-R
 
 ## Descripción
 
+MADE BY:
+William Angulo
+
 El proyecto implementa una API simple para gestionar información sobre videos, permitiendo:
 
 - Crear nuevos videos

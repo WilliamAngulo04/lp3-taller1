@@ -59,8 +59,8 @@ class Video(Resource):
         Returns:
             VideoModel: El video solicitado
         """
-        # TODO
-        pass
+        video = abort_if_video_doesnt_exist(video_id)
+        return video
     
     @marshal_with(resource_fields)
     def put(self, video_id):
@@ -73,9 +73,11 @@ class Video(Resource):
         Returns:
             VideoModel: El video creado
         """
-        # TODO
-        pass
-    
+        video = VideoModel(id=video_id, **video_put_args.parse_args())
+        db.session.add(video)
+        db.session.commit()
+        return video
+
     @marshal_with(resource_fields)
     def patch(self, video_id):
         """
@@ -87,9 +89,12 @@ class Video(Resource):
         Returns:
             VideoModel: El video actualizado
         """
-        # TODO
-        pass
-    
+        video = abort_if_video_doesnt_exist(video_id)
+        for key, value in video_update_args.parse_args().items():
+            setattr(video, key, value)
+        db.session.commit()
+        return video
+
     def delete(self, video_id):
         """
         Elimina un video existente
@@ -100,6 +105,8 @@ class Video(Resource):
         Returns:
             str: Mensaje vacío con código 204
         """
-        # TODO
-        pass
+        video = abort_if_video_doesnt_exist(video_id)
+        db.session.delete(video)
+        db.session.commit()
+        return '', 204
 

@@ -18,7 +18,8 @@ def create_app(config_name='default'):
     Returns:
         Flask: Aplicación Flask configurada
     """
-    # TODO: Crear el objeto 'app'
+    # Crear el objeto 'app'
+    app = Flask(__name__)
 
     
     # Cargar configuración

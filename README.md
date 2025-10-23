@@ -46,7 +46,7 @@ lp3-taller1
 
 1. Clonar el repositorio:
    ```
-   git clone https://github.com/UR-CC/lp3-taller1.git
+   git clone https://github.com/WilliamAngulo04/lp3-taller1
    cd lp3-taller1
    ```
 

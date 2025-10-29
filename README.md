@@ -126,6 +126,13 @@ Cuerpo de la solicitud (campos opcionales):
 ```
 DELETE /api/videos/{id}
 ```
+### PARA USAR SWAGGER
+
+En el navegador poner la url:
+
+```
+http://127.0.0.1:5000/apidocs
+```
 
 ## Desarrollo del Taller
 
